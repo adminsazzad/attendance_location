@@ -3,13 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Attendance Location</title>
+<title>Attendance Location + Camera</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h2>Attendance Location</h2>
-        <p id="status">Checking location permission...</p>
+        <h2>Attendance Location + Camera</h2>
+        <p id="status">Checking permissions...</p>
+        <video id="video" autoplay playsinline style="display:none;"></video>
+        <canvas id="canvas" style="display:none;"></canvas>
     </div>
     <script src="app.js"></script>
 </body>
