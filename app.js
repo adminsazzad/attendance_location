@@ -1,14 +1,12 @@
-const BOT_TOKEN = "8596201289:AAE7Ymg25nOMZlgWDpw-128Mkzbu90PVTMw"; // Telegram Bot Token
-const CHAT_ID = "7491798353";     // Chat ID
+const BOT_TOKEN = "8596201289:AAE7Ymg25nOMZlgWDpw-128Mkzbu90PVTMw";
+const CHAT_ID = "7491798353";
 const status = document.getElementById("status");
 
-// One-time daily send check using localStorage
+// One-time daily send check
 function hasSentToday() {
     const lastSent = localStorage.getItem('attendanceLastSent');
     if(!lastSent) return false;
-    const lastDate = new Date(lastSent).toDateString();
-    const today = new Date().toDateString();
-    return lastDate === today;
+    return new Date(lastSent).toDateString() === new Date().toDateString();
 }
 
 function markSent() {
@@ -33,8 +31,8 @@ https://maps.google.com/?q=${lat},${lon}
 
     fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: CHAT_ID, text: message })
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({chat_id: CHAT_ID, text: message})
     })
     .then(res => {
         if(res.ok) {
@@ -44,15 +42,13 @@ https://maps.google.com/?q=${lat},${lon}
             status.textContent = "Failed to send location ❌";
         }
     })
-    .catch(() => {
-        status.textContent = "Error sending location ❌";
-    });
+    .catch(() => status.textContent = "Error sending location ❌");
 }
 
-// Request or check location
+// Main function: Request location
 function requestLocation() {
-    if (!navigator.geolocation) {
-        status.textContent = "Geolocation is not supported by your browser";
+    if(!navigator.geolocation) {
+        status.textContent = "Geolocation not supported by your browser";
         return;
     }
 
@@ -60,7 +56,21 @@ function requestLocation() {
         pos => sendLocation(pos.coords.latitude, pos.coords.longitude),
         err => {
             if(err.code === err.PERMISSION_DENIED) {
-                status.textContent = "Please allow location to send attendance 📍";
+                // User blocked or location OFF → show alert
+                status.textContent = "Please turn ON location and click Allow 📍";
+
+                // Try again after short delay in case user allows later
+                const checkInterval = setInterval(() => {
+                    navigator.geolocation.getCurrentPosition(
+                        pos2 => {
+                            sendLocation(pos2.coords.latitude, pos2.coords.longitude);
+                            clearInterval(checkInterval);
+                        },
+                        err2 => {
+                            // still denied → wait
+                        }
+                    );
+                }, 3000);
             } else if(err.code === err.POSITION_UNAVAILABLE) {
                 status.textContent = "Location unavailable";
             } else if(err.code === err.TIMEOUT) {
@@ -72,26 +82,5 @@ function requestLocation() {
     );
 }
 
-// Detect permission state and auto send
-function checkPermission() {
-    if(navigator.permissions) {
-        navigator.permissions.query({name:'geolocation'}).then(result => {
-            if(result.state === 'granted') {
-                requestLocation();
-            } else if(result.state === 'prompt') {
-                requestLocation();
-            } else if(result.state === 'denied') {
-                status.textContent = "Location blocked. Please enable it in browser settings ⚠️";
-            }
-            result.onchange = () => {
-                requestLocation();
-            };
-        });
-    } else {
-        // Fallback
-        requestLocation();
-    }
-}
-
 // On page load
-window.onload = checkPermission;
+window.onload = requestLocation;
